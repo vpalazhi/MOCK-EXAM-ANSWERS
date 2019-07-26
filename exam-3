@@ -1,7 +1,7 @@
 Q01:
 kubectl create sa pvviewer
-kubectl create role pvviewer-role --resource=pods --verb=list
-kubectl create rolebinding pvviewer-role-binding --role=pvviewer-role --serviceaccount=default:pvviewer
+kubectl create clusterrole pvviewer-role --resource=persistentvolumes --verb=list
+kubectl create clusterrolebinding pvviewer-role-binding --clusterrole=pvviewer-role --serviceaccount=default:pvviewer
 kubectl run --generator=run-pod/v1 pvviewer --image=redis --dry-run  -o yaml > pvviewer.yaml
 #Add serviceAccountName: pvviewer
 
@@ -46,6 +46,17 @@ spec:
       value: beta
 -------------------------------------------------------------------------------------------------------------------------
 Q04
+apiVersion: v1kind: Pod
+metadata:
+  name: lion
+spec:
+  containers:
+  - image: redis:alpine
+    name: lion    resources:
+      limits:
+        cpu: "2"        memory: "500Mi"
+-------------------------------------------------------------------------------------------------------------------------
+Q05
 kubectl run --generator=run-pod/v1 test-nc  --image=busybox:1.28 --rm -it -- nc -z -v -w2 np-test-service 80
 #The above command should time out
       
@@ -78,6 +89,33 @@ np-test-service (10.110.179.146:80) open
 pod "test-nc" deleted
 master $ 
 -------------------------------------------------------------------------------------------------------------------------
+Q06
 kubectl taint  node node01 env_type=production:NoSchedule
-master $ kubectl describe node node01 | grep -i  taintTaints:             env_type=production:NoSchedule
+master $ kubectl describe node node01 | grep -i  taint
+Taints:             env_type=production:NoSchedule
 master $
+
+kubectl run --generator=run-pod/v1 dev-redis --image=redis:alpine
+
+#Check that the pod is not scheduled on node01
+
+#Create prod-redis pod with toleration
+apiVersion: v1
+kind: Pod
+metadata:
+  name: prod-redis
+  namespace: default
+spec:
+  containers:  - image: redis:alpine
+    name: prod-redis
+  tolerations:
+  - effect: NoSchedule
+    key: env_type
+    value: production
+    operator: Equal
+ 
+kubectl create -f prod-redis.yaml
+
+#Check that the pod is running. Pod can be scheduled on node01 but it is not necessary that the scheduler will exclusively place it 
+on node01. Since there is no node affinity specified, the scheduler can place it on any node. 
+-------------------------------------------------------------------------------------------------------------------------

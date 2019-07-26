@@ -1,3 +1,4 @@
+Q01:
 kubectl create sa pvviewer
 kubectl create role pvviewer-role --resource=pods --verb=list
 kubectl create rolebinding pvviewer-role-binding --role=pvviewer-role --serviceaccount=default:pvviewer
@@ -16,14 +17,16 @@ spec:
   serviceAccountName: pvviewer  
     
     
-    -------------------------------------------------------------------------------------------------------------------------
-    kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' > /root/node_ips OR
-    kubectl get nodes -o jsonpath='{.items[*].status.addresses[].address}' > /root/node_ips
+-------------------------------------------------------------------------------------------------------------------------
+Q02:
+kubectl get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}' > /root/node_ips OR
+kubectl get nodes -o jsonpath='{.items[*].status.addresses[].address}' > /root/node_ips
     
-    Refer: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+Refer: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
     
-       -------------------------------------------------------------------------------------------------------------------------
-       apiVersion: v1
+-------------------------------------------------------------------------------------------------------------------------
+Q03:
+apiVersion: v1
 kind: Pod
 metadata:
   creationTimestamp: null
@@ -41,13 +44,14 @@ spec:
     env:
     - name: name
       value: beta
-      -------------------------------------------------------------------------------------------------------------------------
-      kubectl run --generator=run-pod/v1 test-nc  --image=busybox:1.28 --rm -it -- nc -z -v -w2 np-test-service 80
-      #The above command should time out
+-------------------------------------------------------------------------------------------------------------------------
+Q04
+kubectl run --generator=run-pod/v1 test-nc  --image=busybox:1.28 --rm -it -- nc -z -v -w2 np-test-service 80
+#The above command should time out
       
-      #Now Create a network Policy allowing connections from All to port 80 to pod np-test-1 (use label: run=np-test-1)
+#Now Create a network Policy allowing connections from All to port 80 to pod np-test-1 (use label: run=np-test-1)
       
-      apiVersion: extensions/v1beta1
+apiVersion: extensions/v1beta1
 kind: NetworkPolicy
 metadata:
   generation: 1
@@ -63,9 +67,9 @@ spec:
     - port: 80
       protocol: TCP
       
-   #Check connectivity Again:
+#Check connectivity Again:
    
-   master $ kubectl run --generator=run-pod/v1 test-nc  --image=busybox:1.28 --rm -it -- sh
+master $ kubectl run --generator=run-pod/v1 test-nc  --image=busybox:1.28 --rm -it -- sh
 If you don't see a command prompt, try pressing enter.
 / # nc -z -v -w 2 np-test-service 80
 np-test-service (10.110.179.146:80) open
